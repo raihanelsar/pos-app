@@ -1,0 +1,122 @@
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
+        <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
+          <a class="sidebar-brand brand-logo" href="index.html"><img src="{{ asset('corona/assets/images/logo.svg') }}" alt="logo" /></a>
+          <a class="sidebar-brand brand-logo-mini" href="index.html"><img src="{{ asset('corona/assets/images/logo-mini.svg') }}" alt="logo" /></a>
+        </div>
+
+        <ul class="nav">
+          <li class="nav-item menu-items">
+            <a class="nav-link" href="{{ route('dashboard') }}">
+              <span class="menu-icon">
+                <i class="mdi mdi-speedometer"></i>
+              </span>
+              <span class="menu-title">Dashboard</span>
+            </a>
+          </li>
+
+          <li class="nav-item nav-category">
+            <span class="nav-link">Menu</span>
+          </li>
+
+          {{-- Admin --}}
+           @if(Auth::user()->role === 'admin')
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-toggle="collapse" href="#master-data" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-laptop"></i>
+              </span>
+              <span class="menu-title">Master Data</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="master-data">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('products.index') }}">
+                    <span class="menu-icon">
+                        <i class="mdi mdi-cube-outline"></i >
+                    </span>
+                    <span class="menu-title">Produk</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('categories.index') }}">
+                        <span class="menu-icon">
+                            <i class="mdi mdi-tag-multiple"></i>
+                        </span>
+                    <span class="menu-title">Kategori</span>
+                    </a>
+                </li>
+              </ul>
+            </div>
+            <li class="nav-item menu-items">
+            <a class="nav-link" data-toggle="collapse" href="#kelola-user" aria-expanded="false" aria-controls="kelola-user">
+                <span class="menu-icon">
+                <i class="mdi mdi-security"></i>
+                </span>
+                <span class="menu-title">Kelola User</span>
+            </a>
+          </li>
+          </li>
+            @endif
+
+           {{-- Kasir --}}
+            @if(Auth::user()->role === 'kasir')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('products.index') }}">
+                <span class="menu-icon">
+                    <i class="mdi mdi-cube-outline"></i >
+                </span>
+                <span class="menu-title">Produk</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('transactions.index') }}">
+                <span class="menu-icon">
+                    <i class="mdi mdi-cart"></i>
+                </span>
+                <span class="menu-title">Transaksi</span>
+                </a>
+            </li>
+            @endif
+
+            {{-- Pimpinan --}}
+            @if(Auth::user()->role === 'pimpinan')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('reports.index') }}">
+                <i class="mdi mdi-chart-line menu-icon"></i>
+                <span class="menu-title">Laporan Penjualan</span>
+                </a>
+            </li>
+            @endif
+
+          <li class="nav-item nav-category">
+            <span class="nav-link">Configuration</span>
+          </li>
+
+          <li class="nav-item menu-items">
+            <a class="nav-link" data-toggle="collapse" href="#setting-akun" aria-expanded="false" aria-controls="ui-basic">
+              <span class="menu-icon">
+                <i class="mdi mdi-account"></i>
+              </span>
+              <span class="menu-title">Setting Akun</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="setting-akun">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="">Profile</a></li>
+                <li class="nav-item"> <a class="nav-link" href="">Ganti Password</a></li>
+              </ul>
+            </div>
+          </li>
+
+          <li class="nav-item menu-items">
+            <a class="nav-link" href="{{ route('logout') }}">
+              <span class="menu-icon">
+                <i class="mdi mdi-power"></i>
+              </span>
+              <span class="menu-title">Logout</span>
+            </a>
+          </li>
+
+        </ul>
+      </nav>
