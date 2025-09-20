@@ -44,7 +44,7 @@ class HomeController extends Controller
         $categories = Category::withCount('products')->get();
         $recentTransactions = Order::latest()->limit(8)->get();
 
-        return view('dashboard.dashboard', compact(
+        return view('kasir.dashboard', compact(
             'dates',
             'totalProfits',
             'productCount',

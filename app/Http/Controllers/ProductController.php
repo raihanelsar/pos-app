@@ -13,7 +13,7 @@ class ProductController extends Controller
 {
     // Data untuk DataTables
     public function data(Request $request)
-{
+    {
     $query = Product::with('category');
 
     // Kasir hanya boleh lihat produk yang aktif
@@ -29,10 +29,10 @@ class ProductController extends Controller
             // Hanya admin yang bisa edit/hapus
             if (Auth::check() && Auth::user()->role_id == 1) {
                 return '
-                    <a href="'.route('products.edit', $row->id).'" class="btn btn-warning btn-sm">
+                    <a href="'.route('admin.products.edit', $row->id).'" class="btn btn-warning btn-sm">
                         <i class="mdi mdi-pencil"></i> Edit
                     </a>
-                    <form action="'.route('products.destroy', $row->id).'" method="POST" style="display:inline;">
+                    <form action="'.route('admin.products.destroy', $row->id).'" method="POST" style="display:inline;">
                         '.csrf_field().method_field('DELETE').'
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Yakin hapus?\')">
                             <i class="mdi mdi-delete"></i> Hapus
@@ -44,7 +44,28 @@ class ProductController extends Controller
         })
         ->rawColumns(['action']) // supaya tombol HTML tidak di-escape
         ->make(true);
-}
+    }
+    public function getData(Request $request)
+    {
+    if ($request->ajax()) {
+        $products = Product::with('category');
+
+        return DataTables::eloquent($products)
+            ->addColumn('category_name', fn($row) => $row->category->name ?? '-')
+            ->addColumn('action', function ($row) {
+                return '
+                    <button type="button" class="btn btn-sm btn-primary btnEdit" data-id="'.$row->id.'">Edit</button>
+                    <form method="POST" action="'.route('admin.products.destroy', $row->id).'" style="display:inline;">
+                        '.csrf_field().method_field('DELETE').'
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                ';
+            })
+            ->make(true);
+    }
+
+    return abort(404);
+    }
 
     public function index()
     {
@@ -120,4 +141,6 @@ class ProductController extends Controller
 
         return response()->json(['message' => 'Produk berhasil dihapus']);
     }
+
+
 }

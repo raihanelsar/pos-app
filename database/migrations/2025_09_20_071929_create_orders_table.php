@@ -6,25 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_code')->unique();
-            $table->date('order_date');
-            $table->float('order_amount', 10, 2);
-            $table->float('order_change', 10, 2);
-            $table->smallInteger('order_status')->default(0);
+            $table->string('customer_name')->nullable();
+            $table->dateTime('order_date');
+            $table->integer('order_amount');    // jumlah sebelum diskon
+            $table->integer('total_amount');    // jumlah akhir setelah diskon, pajak, dll
+            $table->integer('order_change')->default(0);
+            $table->enum('order_status', ['pending', 'paid', 'canceled'])->default('pending');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('orders');

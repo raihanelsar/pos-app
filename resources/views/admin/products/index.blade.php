@@ -242,7 +242,7 @@
         e.preventDefault();
         const formData = new FormData(this);
         $.ajax({
-            url: "{{ route('products.store') }}",
+            url: "{{ route('admin.products.store') }}",
             method: 'POST',
             data: formData,
             processData: false,

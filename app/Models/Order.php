@@ -32,7 +32,7 @@ class Order extends Model
         return 'Rp.' . number_format($this->order_change, 2, ',', '.');
     }
 
-    public function orderDetails()
+    public function items()
     {
         return $this->hasMany(OrderDetail::class, 'order_id');
     }

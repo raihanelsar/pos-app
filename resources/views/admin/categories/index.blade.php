@@ -41,7 +41,7 @@
 {{-- Category Modal --}}
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form method="POST" action="{{ route('categories.store') }}">
+        <form method="POST" action="{{ route('admin.categories.store') }}">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
