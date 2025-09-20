@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:3')->prefix('pimpinan')->name('pimpinan.')->group(function () {
         Route::get('/dashboard', [PimpinanController::class, 'index'])->name('dashboard');
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-        Route::get('/laporan', [PimpinanController::class, 'laporan'])->name('laporan');
+        Route::get('/laporan', [TransactionController::class, 'laporan'])->name('pimpinan.laporan');
+        Route::get('/laporan/{id}', [TransactionController::class, 'detailLaporan'])->name('detailLaporan');
     });
 });

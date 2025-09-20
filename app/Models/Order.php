@@ -4,34 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Order extends Model
 {
     use HasFactory;
+
     protected $fillable = [
+        'customer_name',
         'order_code',
         'order_date',
-        'order_amount',
+        'total_amount',   // gunakan ini saja, jangan duplikat dengan order_amount
         'order_change',
-        'order_status'
+        'order_status',
     ];
 
-    protected $appends = ['formatted_date', 'formatted_amount', 'formatted_change'];
+    protected $appends = ['formatted_date', 'formatted_total', 'formatted_change'];
 
+    // 🔹 Format tanggal
     public function getFormattedDateAttribute()
     {
-        return date('d-m-Y', strtotime($this->order_date));
+        return date('d-m-Y H:i', strtotime($this->order_date));
     }
 
-    public function getFormattedAmountAttribute()
+    // 🔹 Format total
+    public function getFormattedTotalAttribute()
     {
-        return 'Rp.' . number_format($this->order_amount, 2, ',', '.');
+        return 'Rp ' . number_format($this->total_amount ?? 0, 0, ',', '.');
     }
 
+    // 🔹 Format kembalian
     public function getFormattedChangeAttribute()
     {
-        return 'Rp.' . number_format($this->order_change, 2, ',', '.');
+        return 'Rp ' . number_format($this->order_change ?? 0, 0, ',', '.');
     }
 
+    // Relasi ke detail item
     public function items()
     {
         return $this->hasMany(OrderDetail::class, 'order_id');

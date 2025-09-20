@@ -1,71 +1,61 @@
 @extends('layouts.app')
 @section('title', 'Detail Laporan')
+
 @section('content')
-<section class="py-5 bg-white rounded">
-  <div class="container">
-    <h1 class="display-4 fw-bold text-center">POS Sale Details</h1>
-    <div class="row">
-      <div class="col-12">
-        <h2>Order Information</h2>
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Order Code:</strong> {{ $order->order_code }}</p>
-          </div>
-          <div class="col-md-6">
-            <p><strong>Order Date:</strong> {{ \Carbon\Carbon::parse($order->order_date)->format('d M Y') }}</p>
-            <p><strong>Order Status:</strong>
-              @if($order->order_status == 0)
-                <span class="badge bg-warning">Pending Payment</span>
-              @else
-                <span class="badge bg-success">Paid</span>
-              @endif
-            </p>
-          </div>
-        </div>
-      </div>
+<section class="row mt-2">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card shadow-sm">
+            <div class="card-body text-white">
 
-      <div class="col-12">
-        <h2>Order Details</h2>
-        <div class="table-responsive" style="overflow-x: auto;">
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach($order->orderDetails as $item)
-                <tr>
-                  <td>{{ $item->product->product_name }}</td>
-                  <td>{{ $item->qty }}</td>
-                  <td>{{$item->product->formatted_price}}</td>
-                  <td>{{$item->formatted_subtotal }}</td>
-                </tr>
-              @endforeach
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" class="text-end fw-bold">Grand Total</td>
-                <td> {{ $order->formatted_amount }}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+                <h3 class="text-center fw-bold text-uppercase mb-3">
+                    Detail Transaksi
+                </h3>
+                <div class="text-center mb-4">
+                    <span class="badge bg-primary">Kode: {{ $order->order_code }}</span>
+                    <p class="mt-2 mb-0"><b>Tanggal:</b> {{ $order->order_date }}</p>
+                    <p class="mb-0"><b>Customer:</b> {{ $order->customer_name ?? '-' }}</p>
+                </div>
 
-        <div class="col-12">
-          <h2>Payment Details</h2>
-          <p><strong>Change:</strong> {{ $order->formatted_change }}</p>
+                <!-- Items Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Produk</th>
+                                <th>Harga</th>
+                                <th>Qty</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($order->items as $item)
+                                <tr>
+                                    <td>{{ $item->product->product_name }}</td>
+                                    <td>{{ $item->formatted_price }}</td>
+                                    <td>{{ $item->qty }}</td>
+                                    <td>{{ $item->formatted_subtotal }}</td>
+                                </tr>
+                                @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary -->
+                <div class="mt-4 text-end">
+                    <h5><b>Total:</b> Rp {{ number_format($order->total_amount, 0, ',', '.') }}</h5>
+                    <h6><b>Dibayar:</b> Rp {{ number_format($order->total_amount + $order->order_change, 0, ',', '.') }}</h6>
+                    <h6><b>Kembalian:</b> Rp {{ number_format($order->order_change, 0, ',', '.') }}</h6>
+                </div>
+
+                {{-- <!-- Back Button -->
+                <div class="mt-4 text-start">
+                    <a href="{{ route('pimpinan.laporan') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </a>
+                </div> --}}
+
+            </div>
         </div>
-        {{-- <div class="col-12 text-center">
-            <a href="{{ route('report.print', $order->id) }}" target="_blank" class="btn btn-success">Print Receipt</a>
-        </div> --}}
     </div>
-  </div>
 </section>
-@endsection
-@section('script')
 @endsection

@@ -41,7 +41,7 @@ class HomeController extends Controller
 
         // Data tambahan untuk dashboard
         $products = Product::latest()->limit(8)->get();
-        $categories = Category::withCount('products')->get();
+        $categoriesCount = Category::count();
         $recentTransactions = Order::latest()->limit(8)->get();
 
         return view('kasir.dashboard', compact(
@@ -51,7 +51,7 @@ class HomeController extends Controller
             'transactionCount',
             'totalProfitSum',
             'products',
-            'categories',
+            'categoriesCount',
             'recentTransactions'
         ));
     }

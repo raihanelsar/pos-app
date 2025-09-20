@@ -27,6 +27,7 @@
                 <i class="menu-arrow"></i>
                 </a>
                 <div class="collapse" id="master-data">
+
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.products.index') }}">
@@ -36,6 +37,7 @@
                         <span class="menu-title">Produk</span>
                     </a>
                     </li>
+
                     <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.categories.index') }}">
                         <span class="menu-icon">
@@ -44,9 +46,11 @@
                         <span class="menu-title">Kategori</span>
                     </a>
                     </li>
+
                 </ul>
                 </div>
             </li>
+
             <li class="nav-item menu-items">
                 <a class="nav-link" href="{{ route('admin.users.index') }}">
                     <span class="menu-icon">
@@ -67,6 +71,7 @@
                     <span class="menu-title">Produk</span>
                 </a>
             </li>
+
             <li class="nav-item menu-items">
                 <a class="nav-link" href="{{ route('kasir.dashboard') }}">
                     <span class="menu-icon">
@@ -88,7 +93,7 @@
                 </a>
             </li>
             <li class="nav-item menu-items">
-                <a class="nav-link" href="{{ route('pimpinan.laporan') }}">
+                <a class="nav-link" href="{{ route('pimpinan.pimpinan.laporan') }}">
                     <span class="menu-icon">
                         <i class="mdi mdi-chart-line"></i>
                     </span>

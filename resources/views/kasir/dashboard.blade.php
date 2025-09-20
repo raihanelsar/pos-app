@@ -32,7 +32,7 @@
                             <div>
                                 <h6 class="text-white">Kategori</h6>
                                 <h5 class="font-extrabold text-white mb-0">
-                                    {{ number_format($categoryCount ?? 0) }}
+                                    {{ number_format($categoriesCount ?? 0) }}
                                 </h5>
                             </div>
                         </div>
