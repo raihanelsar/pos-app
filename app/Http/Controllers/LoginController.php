@@ -7,36 +7,46 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    // Menampilkan halaman login
     public function login()
     {
         return view('login');
     }
 
-    // Proses login via AJAX
     public function authLogin(Request $request)
     {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string|min:6',
+        ]);
+
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            $role = Auth::user()->role;
+            $user = Auth::user();
+            $roleName = $user->role_name;
 
             // Tentukan URL redirect berdasarkan role
-            if ($role === 'admin') {
-                $redirectUrl = route('dashboard');
-            } elseif ($role === 'kasir') {
-                $redirectUrl = route('transactions.index');
-            } elseif ($role === 'pimpinan') {
-                $redirectUrl = route('reports.daily');
-            } else {
-                $redirectUrl = route('dashboard');
+            switch ($roleName) {
+                case 'admin':
+                    $redirectUrl = route('dashboard');
+                    break;
+                case 'kasir':
+                    $redirectUrl = route('dashboard');
+                    break;
+                case 'pimpinan':
+                    $redirectUrl = route('dashboard');
+                    break;
+                default:
+                    $redirectUrl = route('dashboard');
+                    break;
             }
 
             return response()->json([
-                'success' => true,
-                'role' => $role,
+                'success'     => true,
+                'message'     => 'Login berhasil',
+                'role'        => $roleName,
                 'redirectUrl' => $redirectUrl,
             ]);
         }
@@ -47,7 +57,6 @@ class LoginController extends Controller
         ], 401);
     }
 
-    // Logout
     public function logout(Request $request)
     {
         Auth::logout();

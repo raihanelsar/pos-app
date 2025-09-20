@@ -25,9 +25,9 @@
             <div class="navbar-profile">
               <img class="img-xs rounded-circle" src="{{ asset('corona/assets/images/faces/face15.jpg') }}" alt="">
               <p class="mb-0 d-none d-sm-block navbar-profile-name">
-                {{ Auth::user()->name }}
+                {{ auth()->user()->name }}
                 <span class="badge bg-info text-dark ms-1">
-                  {{ ucfirst(Auth::user()->role) }}
+                  {{ auth()->user()->role_name ?? auth()->user()->role_id }}
                 </span>
               </p>
               <i class="mdi mdi-menu-down d-none d-sm-block"></i>

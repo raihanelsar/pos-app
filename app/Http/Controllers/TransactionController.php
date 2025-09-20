@@ -3,82 +3,103 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\Transaction;
-use App\Models\TransactionItem;
+use App\Models\Order;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function kasir()
     {
-        $products = Product::where('is_active',1)->get();
-        $transactions = Transaction::with('items.product')->latest()->paginate(20);
-        return view('transactions.index', compact('products','transactions'));
+        $products = Product::active()
+            ->notDelete()
+            ->where('product_qty', '>', 0)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->product_name,
+                    'price' => (int) $product->product_price,
+                    'image' => $product->product_photo,
+                    'qty' => (int) $product->product_qty,
+                    'option' => '',
+                ];
+            });
+
+        return view('kasir.kasir', compact('products'));
     }
 
-    public function store(Request $request)
+    public function kasirPost(Request $request)
     {
-        $data = $request->validate([
-            'customer_name' => 'nullable|string|max:255',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|integer|min:0',
-            'payment_amount' => 'required|integer|min:0'
+        $validation  = Validator::make($request->all(), [
+            'cart' => 'required',
+            'cash' => 'required|numeric|min:0',
+            'total' => 'required|numeric|min:0',
+            'change' => 'required|numeric|min:0',
+            'order_code' => 'required',
         ]);
 
-        $total = 0;
-        foreach ($data['items'] as $it) {
-            $total += ($it['quantity'] * $it['unit_price']);
+        if ($validation->fails()) {
+            return redirect()->back()
+                ->withErrors($validation)
+                ->withInput();
         }
 
-        // order fields
-        $orderCode = 'ORD' . now()->format('YmdHis') . rand(100,999);
-        $orderDate = now();
-        $orderAmount = $total;
-        $payment = intval($data['payment_amount']);
+        $cart = json_decode($request->cart, true);
 
-        // Server-side guard: reject if payment is insufficient
-        if ($payment < $orderAmount) {
-            return response()->json([
-                'message' => 'Pembayaran kurang dari total transaksi',
-                'errors' => ['payment_amount' => ['Pembayaran tidak mencukupi jumlah total']]
-            ], 422);
-        }
-
-        $orderChange = max(0, $payment - $orderAmount);
-        $orderStatus = 'paid';
-
-        $tx = Transaction::create([
-            'user_id' => optional(auth())->id(),
-            'customer_name' => $data['customer_name'] ?? null,
-            'total_amount' => $total,
-            'order_code' => $orderCode,
-            'order_date' => $orderDate,
-            'order_amount' => $orderAmount,
-            'order_change' => $orderChange,
-            'order_status' => $orderStatus,
-        ]);
-
-        foreach ($data['items'] as $it) {
-            TransactionItem::create([
-                'transaction_id' => $tx->id,
-                'product_id' => $it['product_id'],
-                'quantity' => $it['quantity'],
-                'unit_price' => $it['unit_price'],
-                'line_total' => $it['quantity'] * $it['unit_price']
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'order_code' => $request->order_code,
+                'order_date' => now(),
+                'order_amount' => $request->total,
+                'order_change' =>  $request->change,
+                'order_status' =>  1,
+                'customer_name' => "John Doe",
             ]);
 
-            // Also store in order_details table per request
-            \App\Models\OrderDetail::create([
-                'order_id' => $tx->id,
-                'product_id' => $it['product_id'],
-                'qty' => $it['quantity'],
-                'order_price' => $it['unit_price'],
-                'order_subtotal' => $it['quantity'] * $it['unit_price']
-            ]);
+            foreach ($cart as $item) {
+                $product = Product::find($item['productId']);
+                if ($product) {
+                    $product->product_qty -= $item['qty'];
+                    $product->save();
+                }
+
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['productId'],
+                    'qty' => $item['qty'],
+                    'order_price' => $item['price'],
+                    'order_subtotal' => $item['qty'] * $item['price'],
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Transaction failed: ' . $e->getMessage());
         }
 
-        return response()->json(['message' => 'Transaksi berhasil disimpan', 'transaction_id' => $tx->id]);
+        return redirect()->route('kasir')->with('success', 'Transaction successful');
+    }
+
+    public function report()
+    {
+        $orders = Order::orderBy('order_date', 'desc')->get();
+        return view('pimpinan.laporan', compact('orders'));
+    }
+
+    public function reportDetail(string $id)
+    {
+        $order = Order::with('orderDetails.product')->findOrFail($id);
+        return view('pimpinan.detail-laporan', compact('order'));
+    }
+
+    public function print()
+    {
+        $orders = Order::get();
+        return view('report.print', compact('orders'));
     }
 }

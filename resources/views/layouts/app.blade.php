@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>POS Admin</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>POS Admin</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
   <!-- Bootstrap 5 CSS from CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <!-- plugins:css -->
@@ -31,32 +31,24 @@
   <link rel="shortcut icon" href="{{ asset('corona/assets/images/favicon.png') }}" />
   <!-- SweetAlert (keep only minified) -->
   <link rel="stylesheet" href="{{ asset('corona/assets/sweetalert2/sweetalert2.min.css')}}">
-  <!-- theme.css contains dark/light rules and DataTables dark styles -->
-  </head>
-  <body>
-    <div class="container-scroller">
-      <!-- partial:partials/_sidebar.html -->
-      @include('partials.sidebar')
-      <!-- partial -->
-      <div class="container-fluid page-body-wrapper">
-        <!-- partial:partials/_navbar.html -->
-        @include('partials.navbar')
-        <!-- partial -->
-        <div class="main-panel">
-          <div class="content-wrapper">
-            @yield('content')
+</head>
+<body>
+  <div class="container-scroller">
+    @include('layouts.partials.sidebar')
+
+    <div class="container-fluid page-body-wrapper">
+      @include('layouts.partials.navbar')
+
+      <div class="main-panel">
+        <div class="content-wrapper">
+          @yield('content')
         </div>
-        <!-- content-wrapper ends -->
-        <!-- partial:partials/_footer.html -->
-        @include('partials.footer')
-        <!-- partial -->
+        @include('layouts.partials.footer')
+      </div>
     </div>
-    <!-- main-panel ends -->
-</div>
-<!-- page-body-wrapper ends -->
-</div>
-<!-- container-scroller -->
-<!-- plugins:js -->
+  </div>
+
+ <!-- plugins:js -->
 <script src="{{ asset('corona/assets/vendors/js/vendor.bundle.base.js') }}"></script>
 <!-- endinject -->
 <!-- Plugin js for this page -->
@@ -97,8 +89,9 @@
   <!-- Custom js for this page -->
   <script src="{{ asset('corona/assets/js/dashboard.js') }}"></script>
   <!-- End custom js for this page -->
+  <!-- Custom per-page -->
   @yield('modalEdit')
   @yield('modal')
   @yield('script')
-  </body>
+</body>
 </html>

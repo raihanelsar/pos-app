@@ -1,4 +1,4 @@
-@extends('app')
+@extends('layouts.app')
 @section('title', 'Data Produk')
 
 @section('content')
@@ -104,7 +104,7 @@
 <!-- Modal Create -->
 <div class="modal fade" id="modalCreate" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content bg-white">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalCreateLabel">Tambah Produk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -348,4 +348,3 @@
     });
 </script>
 @endsection
-

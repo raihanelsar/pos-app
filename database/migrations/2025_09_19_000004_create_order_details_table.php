@@ -16,9 +16,6 @@ return new class extends Migration
             $table->integer('order_price')->default(0);
             $table->integer('order_subtotal')->default(0);
             $table->timestamps();
-
-            $table->foreign('order_id')->references('id')->on('transactions')->onDelete('cascade');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('restrict');
         });
     }
 

@@ -5,23 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        $categories = Category::all();
-        return view('products.index', compact('categories'));
-    }
-
+    // Data untuk DataTables
     public function data(Request $request)
 {
     $query = Product::with('category');
 
     // Kasir hanya boleh lihat produk yang aktif
-    if (auth()->user()->role === 'kasir') {
+    if (Auth::check() && Auth::user()->role_id == 2) {
         $query->where('is_active', 1);
     }
 
@@ -31,7 +27,7 @@ class ProductController extends Controller
         })
         ->addColumn('action', function($row) {
             // Hanya admin yang bisa edit/hapus
-            if (auth()->user()->role === 'admin') {
+            if (Auth::check() && Auth::user()->role_id == 1) {
                 return '
                     <a href="'.route('products.edit', $row->id).'" class="btn btn-warning btn-sm">
                         <i class="mdi mdi-pencil"></i> Edit
@@ -50,26 +46,29 @@ class ProductController extends Controller
         ->make(true);
 }
 
+    public function index()
+    {
+        $categories = Category::all();
+        return view('admin.products.index', compact('categories'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required',
-            'product_name' => 'required',
-            'product_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'product_name' => 'required|string|max:255',
+            'product_photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'product_price' => 'required|numeric',
-            'product_description' => 'required',
+            'product_description' => 'required|string',
             'is_active' => 'required|boolean',
         ]);
 
-        $photo = null;
-        if ($request->hasFile('product_photo')) {
-            $photo = $request->file('product_photo')->store('products', 'public');
-        }
+        $path = $request->file('product_photo')->store('products', 'public');
 
         $product = Product::create([
             'category_id' => $request->category_id,
             'product_name' => $request->product_name,
-            'product_photo' => $photo,
+            'product_photo' => $path,
             'product_price' => $request->product_price,
             'product_description' => $request->product_description,
             'is_active' => $request->is_active,
@@ -80,57 +79,45 @@ class ProductController extends Controller
 
     public function show($id)
     {
-        $product = Product::with('category')->findOrFail($id);
+        $product = Product::with('category')->find($id);
         return response()->json($product);
     }
 
     public function update(Request $request, $id)
     {
+        $product = Product::findOrFail($id);
+
         $request->validate([
-            'category_id' => 'required',
-            'product_name' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            'product_name' => 'required|string|max:255',
             'product_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'product_price' => 'required|numeric',
-            'product_description' => 'required',
+            'product_description' => 'required|string',
             'is_active' => 'required|boolean',
         ]);
 
-        $product = Product::findOrFail($id);
+        $data = $request->only(['category_id','product_name','product_price','product_description','is_active']);
 
-        $photo = $product->product_photo;
         if ($request->hasFile('product_photo')) {
-            // delete old photo if present
-            if ($photo) {
-                Storage::disk('public')->delete($photo);
+            if ($product->product_photo && Storage::disk('public')->exists($product->product_photo)) {
+                Storage::disk('public')->delete($product->product_photo);
             }
-            $photo = $request->file('product_photo')->store('products', 'public');
+            $data['product_photo'] = $request->file('product_photo')->store('products', 'public');
         }
 
-        $product->update([
-            'category_id' => $request->category_id,
-            'product_name' => $request->product_name,
-            'product_photo' => $photo,
-            'product_price' => $request->product_price,
-            'product_description' => $request->product_description,
-            'is_active' => $request->is_active,
-        ]);
+        $product->update($data);
 
-        return response()->json(['message' => 'Produk berhasil diupdate']);
+        return response()->json(['message' => 'Produk berhasil diperbarui']);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
         $product = Product::findOrFail($id);
-        // delete photo from storage if exists
-        if ($product->product_photo) {
+        if ($product->product_photo && Storage::disk('public')->exists($product->product_photo)) {
             Storage::disk('public')->delete($product->product_photo);
         }
         $product->delete();
-        // If the client expects JSON (AJAX) return JSON, otherwise redirect back with a flash message
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['message' => 'Produk berhasil dihapus']);
-        }
 
-        return redirect()->back()->with('success', 'Produk berhasil dihapus');
+        return response()->json(['message' => 'Produk berhasil dihapus']);
     }
 }

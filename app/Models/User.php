@@ -21,7 +21,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
     ];
+
+    public function getRoleNameAttribute()
+    {
+        switch ($this->role_id) {
+            case '1':
+                $label='admin';
+                break;
+            case '2':
+                $label='kasir';
+                break;
+            case '3':
+                $label='pimpinan';
+                break;
+        }
+        return $label;
+    }
 
     /**
      * The attributes that should be hidden for serialization.

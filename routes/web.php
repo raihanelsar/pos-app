@@ -1,72 +1,47 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\PimpinanController;
 use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\ReportController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
-// Auth routes
-Route::get('/login', [LoginController::class,'login'])->name('login');
-Route::post('/authLogin', [LoginController::class,'authLogin'])->name('authLogin');
-Route::post('/logout', [LoginController::class,'logout'])->name('logout');
+// 🔐 Auth Routes
+Route::get('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/authLogin', [LoginController::class, 'authLogin'])->name('authLogin');
 
-// Dashboard (semua user login bisa akses)
+// 🔒 Protected Routes (hanya bisa diakses setelah login)
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [HomeController::class,'index'])->name('dashboard');
+
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    Route::middleware('role:1')->group(function () {
+        Route::resource('products', ProductController::class);
+        Route::get('/products/data', [ProductController::class, 'data'])->name('products.data');
+        Route::resource('categories', CategoryController::class);
+        Route::resource('transactions', TransactionController::class);
+        Route::resource('users', UserController::class);
+    });
+
+    Route::middleware('role:2')->group(function () {
+        Route::get('kasir/products', [ProductController::class, 'index'])->name('kasir.products.index');
+        Route::get('kasir/transactions', [TransactionController::class, 'index'])->name('kasir.transactions.index');
+        Route::post('kasir/transactions', [TransactionController::class, 'store'])->name('kasir.transactions.store');
+    });
+
+    Route::middleware('role:3')->group(function () {
+        Route::get('pimpinan/products', [ProductController::class, 'index'])->name('pimpinan.products.index');
+        Route::get('pimpinan/laporan', [PimpinanController::class, 'index'])->name('pimpinan.laporan');
+    });
 });
 
-// Shared route: admin & kasir sama-sama bisa akses
-Route::middleware(['auth','role:admin|kasir'])->group(function () {
-    Route::get('/products/data', [ProductController::class, 'data'])->name('products.data');
-});
-
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth','role:admin'])->group(function () {
-    // Products & Categories CRUD penuh
-    Route::resource('products', ProductController::class);
-    Route::resource('categories', CategoryController::class);
-
-    // Transactions full
-    Route::resource('transactions', TransactionController::class);
-
-    // (opsional) Kelola user
-    // Route::view('users', 'users.index')->name('users.index');
-});
-
-/*
-|--------------------------------------------------------------------------
-| KASIR
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth','role:kasir'])->group(function () {
-    // Kasir hanya boleh lihat produk (index & show)
-    Route::resource('products', ProductController::class)->only(['index','show']);
-    // Transaksi hanya kasir
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| PIMPINAN
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth','role:pimpinan'])->group(function () {
-    // Lihat produk (stok barang)
-    Route::resource('products', ProductController::class)->only(['index','show']);
-
-    // Laporan penjualan
-
-});

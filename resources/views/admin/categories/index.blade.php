@@ -1,4 +1,4 @@
-@extends('app')
+@extends('layouts.app')
 @section('title', 'Categories')
 @section('content')
 <section class="row mt-2">

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 
 class OrderDetail extends Model
 {
-    protected $table = 'order_details';
+    use HasFactory;
 
     protected $fillable = [
         'order_id',
@@ -16,6 +18,18 @@ class OrderDetail extends Model
         'order_subtotal'
     ];
 
+    protected $appends = ['formatted_price', 'formatted_subtotal'];
+
+    public function getFormattedPriceAttribute(): string
+    {
+        return 'Rp. ' . number_format($this->order_price, 0, ',', '.');
+    }
+
+    public function getFormattedSubtotalAttribute(): string
+    {
+        return 'Rp. ' . number_format($this->order_subtotal, 0, ',', '.');
+    }
+
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -23,6 +37,6 @@ class OrderDetail extends Model
 
     public function order()
     {
-        return $this->belongsTo(Transaction::class, 'order_id');
+        return $this->belongsTo(Order::class, 'order_id');
     }
 }
