@@ -2,112 +2,144 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
-    public function index()
-    {
-        $products = Product::where('is_active', 1)->get();
-        $orders = Order::with('items.product')->latest()->paginate(20);
-
-        return view('kasir.index', compact('products', 'orders'));
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'customer_name' => 'nullable|string|max:255',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|integer|min:0',
-            'paid_amount' => 'required|integer|min:0',
-        ]);
-
-        // Hitung total
-        $totalAmount = collect($data['items'])->sum(function ($item) {
-            return $item['quantity'] * $item['unit_price'];
-        });
-
-        // Simpan order
-        $order = Order::create([
-            'order_code'    => 'ORD' . now()->format('YmdHis') . rand(1000, 9999),
-            'customer_name' => $data['customer_name'],
-            'order_date'    => now(),
-            'order_amount'  => $data['paid_amount'], // ✅ uang yang dibayar customer
-            'total_amount'  => $totalAmount,
-            'order_change'  => $data['paid_amount'] - $totalAmount,
-            'order_status'  => 'pending', // kalau ada default bisa diabaikan
-        ]);
-
-        // Simpan detail order
-        foreach ($data['items'] as $item) {
-            $order->items()->create([
-                'product_id'   => $item['product_id'],
-                'qty'          => $item['quantity'],
-                'order_price'  => $item['unit_price'],
-                'order_subtotal' => $item['quantity'] * $item['unit_price'],
-            ]);
-        }
-
-        return redirect()->route('kasir.index')
-            ->with('success', 'Transaksi berhasil disimpan');
-    }
-
-    public function laporan()
-    {
-        $orders = Order::orderBy('order_date', 'desc')->get();
-        return view('pimpinan.laporan', compact('orders'));
-    }
-
-    public function detailLaporan(string $id)
-    {
-        $order = Order::with('items.product')->findOrFail($id);
-        return view('pimpinan.detail-laporan', compact('order'));
-    }
-
     /**
-     * Dashboard Kasir
+     * Halaman utama kasir
+     * Sekarang juga berfungsi sebagai dashboard.
      */
     public function dashboard()
     {
-        // Jumlah produk aktif
-        $productCount = Product::where('is_active', 1)->count();
-
-        // Jumlah kategori (kalau ada relasi kategori di model Product)
-        $categoriesCount = DB::table('categories')->count();
-
-        // Jumlah transaksi
-        $transactionCount = Order::count();
-
-        // Total profit (pakai total_amount sebagai profit sederhana)
-        $totalProfitSum = Order::sum('total_amount');
-
-        // Ambil data untuk grafik
-        $profits = Order::select(
-                DB::raw('DATE(order_date) as date'),
-                DB::raw('SUM(total_amount) as total')
-            )
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
+        // Ambil produk aktif yang stoknya masih ada
+        $products = Product::where('is_active', 1)
+            ->where('product_qty', '>', 0)
             ->get();
 
-        $dates = $profits->pluck('date');
-        $totalProfits = $profits->pluck('total');
+        // Ambil riwayat transaksi terbaru beserta detail & produk
+        $orders = Order::with('items.product')
+            ->latest()
+            ->paginate(20);
 
-        // Transaksi terbaru
-        $recentTransactions = Order::latest()->take(10)->get()->map(function ($order) {
-            return (object) [
-                'transaction_code' => $order->order_code,
-                'formatted_date'   => $order->order_date?->format('d/m/Y H:i'),
-                'total'            => $order->total_amount,
-                'cashier_name'     => $order->cashier->name ?? '-', // kalau ada relasi cashier
-            ];
-        });
+        // Ambil data dashboard
+        $todayStart = now()->startOfDay();
+        $todayEnd = now()->endOfDay();
 
+        $todayOrders = Order::whereBetween('created_at', [$todayStart, $todayEnd])->count();
+        $todaySales = Order::whereBetween('created_at', [$todayStart, $todayEnd])->sum('order_amount');
+        $activeProducts = Product::where('is_active', true)->count();
+        $topProducts = OrderDetail::selectRaw('product_id, SUM(qty) as sold_qty')
+            ->groupBy('product_id')
+            ->orderByDesc('sold_qty')
+            ->with('product')
+            ->take(5)
+            ->get();
+
+        // Kirim semua variabel ke tampilan
+        return view('dashboard.dashboard-kasir', compact('products', 'orders', 'todayOrders', 'todaySales', 'activeProducts', 'topProducts'));
+    }
+
+    /**
+     * Simpan transaksi baru
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'paid_amount' => 'required|numeric|min:0',
+            'customer_name' => 'nullable|string',
+            'items'       => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity'   => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $total = collect($request->items)->sum(function($i){
+                return $i['quantity'] * $i['unit_price'];
+            });
+
+            // Hitung kembalian
+            $change = $request->paid_amount - $total;
+
+            // Periksa apakah jumlah bayar mencukupi
+            if ($change < 0) {
+                // Jika pembayaran tidak mencukupi, rollback dan kembalikan error
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jumlah bayar tidak mencukupi.',
+                ], 422);
+            }
+
+            $order = Order::create([
+                'order_code'   => 'TRX' . now()->format('YmdHis'),
+                'order_date'   => now(),
+                'order_amount' => $total,
+                'paid_amount'  => $request->paid_amount,
+                'order_change' => $change, // Simpan kembalian yang dihitung
+                'customer_name'=> $request->customer_name,
+                'user_id'      => auth()->id(),
+            ]);
+
+            foreach ($request->items as $item) {
+                // Periksa apakah stok produk mencukupi sebelum membuat
+                $product = Product::find($item['product_id']);
+                if ($product->product_qty < $item['quantity']) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stok produk tidak mencukupi.',
+                    ], 422);
+                }
+
+                OrderDetail::create([
+                    'order_id'   => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity'   => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'subtotal'   => $item['quantity'] * $item['unit_price'],
+                ]);
+
+                Product::where('id', $item['product_id'])
+                    ->decrement('product_qty', $item['quantity']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil disimpan',
+                'print_url' => route('kasir.print', $order->id),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // New Function based on index.blade.php
+    public function index()
+    {
+        // Ambil produk aktif yang stoknya masih ada
+        $products = Product::where('is_active', 1)
+            ->where('product_qty', '>', 0)
+            ->get();
+
+        // Ambil riwayat transaksi terbaru
+        $orders = Order::with('items')
+            ->latest()
+            ->paginate(20);
+
+        return view('kasir.index', compact('products', 'orders'));
     }
 }

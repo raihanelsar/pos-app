@@ -1,241 +1,303 @@
 @extends('layouts.app')
-@section('title','Transaksi')
-
+@section('title', 'Kasir - Transaksi')
 
 @section('content')
-<section class="row mt-2">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header text-white">
-                <h5>Transaksi POS</h5>
-            </div>
-            <div class="card-body text-white">
-                <div class="mb-3">
-                    <label>Customer (opsional)</label>
-                    <input type="text" id="customer_name" class="form-control">
-                </div>
-                @csrf
-                <div class="row g-2 align-items-end mb-3">
-                    <div class="col">
-                        <label>Produk</label>
-                        <select id="tx_product" class="form-select">
-                            <option value="">-- Pilih produk --</option>
-                            @foreach($products as $p)
-                                <option value="{{ $p->id }}" data-price="{{ $p->product_price }}">{{ $p->product_name }} - {{ number_format($p->product_price,0,',','.') }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-2">
-                        <label>Jumlah</label>
-                        <input type="number" id="tx_qty" value="1" class="form-control" min="1">
-                    </div>
-                    <div class="col-auto">
-                        <button id="addItem" class="btn btn-primary">Tambah</button>
-                    </div>
-                </div>
+<div class="pagetitle">
+  <h1><i class="mdi mdi-cash-register"></i> Kasir</h1>
+</div>
 
+<section class="section">
+  <div class="row">
 
-                <div class="table-responsive">
-                    <table class="table" id="tx_items_tbl">
-                        <thead>
-                            <tr>
-                                <th>Produk</th>
-                                <th>Qty</th>
-                                <th>Harga</th>
-                                <th>Subtotal</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-2">
-                                <label>Bayar</label>
-                                <div class="input-group">
-                                    <input type="number" id="payment_amount" class="form-control" min="0" value="0">
-                                    <button id="exactPay" class="btn btn-outline-secondary" type="button" title="Isi jumlah pas">Exact</button>
-                                </div>
-                                <div id="payment_feedback" class="invalid-feedback d-none">Jumlah bayar kurang dari total.</div>
-                            </div>
-                        <div class="mb-2">
-                            <label>Kembalian</label>
-                            <input type="text" id="payment_change_display" class="form-control" readonly>
-                        </div>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-center justify-content-end">
-                        <div>
-                            <h5>Total: <span id="tx_total">0</span></h5>
-                            <div class="mt-2 text-end">
-                                <button id="submitTx" class="btn btn-success">Simpan Transaksi</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    {{-- PRODUK --}}
+    <div class="col-lg-8 mb-3">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between">
+          <span><i class="mdi mdi-package-variant-closed"></i> Produk Tersedia</span>
+          <span class="badge bg-light text-dark">{{ count($products) }} produk</span>
         </div>
+        <div class="card-body">
+          <div class="row g-3">
+            @forelse($products as $p)
+              <div class="col-md-4">
+                <div class="card h-100 shadow-sm product-card">
+                  <img src="{{ $p->product_photo ? asset('storage/'.$p->product_photo) : asset('images/no-image.png') }}"
+                       class="card-img-top" style="height:180px; object-fit:cover;">
+                  <div class="card-body d-flex flex-column justify-content-between text-white">
+                    <div>
+                      <h6 class="fw-bold mb-1">{{ $p->product_name ?? $p->name }}</h6>
+                      <p class="text-muted small mb-1">
+                        Rp {{ number_format($p->price ?? $p->product_price, 0, ',', '.') }}
+                      </p>
+                      <span class="badge bg-info">Stok: {{ $p->product_qty ?? '-' }}</span>
+                    </div>
+                    <button
+                      class="btn btn-sm btn-success mt-2 add-to-cart"
+                      data-id="{{ $p->id }}"
+                      data-name="{{ $p->product_name ?? $p->name }}"
+                      data-price="{{ $p->price ?? $p->product_price }}">
+                      <i class="mdi mdi-cart-plus"></i> Tambah
+                    </button>
+                  </div>
+                </div>
+              </div>
+            @empty
+              <div class="col-12 text-center text-muted">Belum ada produk aktif</div>
+            @endforelse
+          </div>
+        </div>
+      </div>
     </div>
 
-
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header text-white">
-                <h5>Riwayat Transaksi</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group">
-                    @foreach($orders as $order)
-                        <li class="list-group-item">
-                            #{{ $order->id }} - {{ $order->customer_name ?? 'Pelanggan' }} - {{ number_format($order->total_amount,0,',','.') }}
-                        </li>
-                    @endforeach
-                </ul>
-                <div class="mt-2">{{ $orders->links() }}</div>
-            </div>
+    {{-- KERANJANG --}}
+    <div class="col-lg-4 mb-3">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-success text-white">
+          <i class="mdi mdi-cart-outline"></i> Keranjang
         </div>
+        <div class="card-body">
+          <form id="transaction-form" method="POST" action="{{ route('kasir.transaksi.store') }}">
+            @csrf
+
+            <div class="table-responsive mb-3">
+              <table class="table table-sm table-hover align-middle" id="cart-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>Produk</th>
+                    <th>Qty</th>
+                    <th class="text-end">Subtotal</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="text-center text-muted"><td colspan="4">Belum ada item</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            {{-- Total & Payment --}}
+            <div class="row g-2 mb-3 text-white">
+              <div class="col-12">
+                <div class="card bg-light p-2">
+                  <label class="form-label mb-0">Total</label>
+                  <h4 id="total-display" class="mb-0 text-end">Rp 0</h4>
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Bayar</label>
+                <input type="number" name="paid_amount" id="paid-amount"
+                       class="form-control text-start" required min="0">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Kembalian</label>
+                <input type="text" id="change-display"
+                       class="form-control text-start fw-bold" readonly>
+              </div>
+            </div>
+
+            <div class="mb-2 text-white">
+              <label class="form-label">Customer</label>
+              <input type="text" name="customer_name" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">
+              <i class="mdi mdi-check-circle"></i> Simpan Transaksi
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {{-- RIWAYAT --}}
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+          <i class="mdi mdi-history"></i> Riwayat Transaksi
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Kode</th>
+                  <th>Waktu</th>
+                  <th class="text-end">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @forelse($orders as $t)
+                  <tr>
+                    <td>{{ $t->order_code }}</td>
+                    <td>{{ $t->order_date?->format('d M H:i') }}</td>
+                    <td class="text-end">
+                      Rp {{ number_format($t->order_amount, 0, ',', '.') }}
+                    </td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="3" class="text-center text-muted">Belum ada transaksi</td>
+                  </tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
+          <div class="p-2">
+            {{ $orders->links() }}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </section>
 @endsection
 
-
 @section('script')
 <script>
-    const items = [];
-    function formatRupiah(n){ return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0,maximumFractionDigits:0}).format(n||0); }
+(function(){
+  const cart = [];
+  const cartTbody = document.querySelector('#cart-table tbody');
+  const totalDisplay = document.getElementById('total-display');
+  const paidInput = document.getElementById('paid-amount');
+  const changeDisplay = document.getElementById('change-display');
+  const form = document.getElementById('transaction-form');
 
+  function findIndex(id) {
+    return cart.findIndex(i => String(i.id) === String(id));
+  }
 
-    function recalc(){
-        let total = 0;
-        const $body = $('#tx_items_tbl tbody').empty();
-        items.forEach((it,idx)=>{
-            const sub = it.qty * it.price;
-            total += sub;
-            $body.append(`<tr data-idx="${idx}"><td>${it.name}</td><td>${it.qty}</td><td>${formatRupiah(it.price)}</td><td>${formatRupiah(sub)}</td><td><button class="btn btn-sm btn-danger removeItem">Hapus</button></td></tr>`);
-        });
-        $('#tx_total').text(formatRupiah(total));
-        // update payment feedback and change
-        updatePaymentState();
+  function addToCart(id, name, price) {
+  console.log("Add to cart:", id, name, price); // debug
+  const idx = findIndex(id);
+  if (idx > -1) {
+    cart[idx].qty++;
+  } else {
+    cart.push({ id: String(id), name, price, qty: 1 });
+  }
+  renderCart();
+}
+  window.addToCart = addToCart;
+
+  document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.add-to-cart');
+  if (btn) {
+    addToCart(btn.dataset.id, btn.dataset.name, parseFloat(btn.dataset.price));
+  }
+});
+
+  function renderCart() {
+    cartTbody.innerHTML = '';
+    if (cart.length === 0) {
+      cartTbody.innerHTML = '<tr class="text-center text-muted"><td colspan="4">Belum ada item</td></tr>';
+      totalDisplay.textContent = 'Rp 0';
+      changeDisplay.value = '';
+      return;
     }
 
+    let total = 0;
+    cart.forEach((item, index) => {
+      const subtotal = item.qty * item.price;
+      total += subtotal;
 
-    $('#addItem').on('click', function(e){
-        e.preventDefault();
-        const pid = $('#tx_product').val();
-        if(!pid) return Swal.fire('Pilih produk','Silakan pilih produk terlebih dahulu','info');
-        const $opt = $('#tx_product option:selected');
-        const name = $opt.text();
-        const price = parseInt($opt.data('price')||0);
-        const qty = parseInt($('#tx_qty').val()||1);
-        items.push({product_id: pid, name, price, qty});
-        recalc();
-        $('#tx_product').focus();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          ${escapeHtml(item.name)}
+          <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
+        </td>
+        <td style="width:90px;">
+          <input type="number" name="items[${index}][quantity]"
+                 class="form-control form-control-sm qty-input"
+                 value="${item.qty}" min="1" data-index="${index}">
+          <input type="hidden" name="items[${index}][unit_price]" value="${item.price}">
+        </td>
+        <td class="text-end">Rp ${new Intl.NumberFormat('id-ID').format(subtotal)}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-danger remove-btn" data-index="${index}">X</button>
+        </td>
+      `;
+      cartTbody.appendChild(tr);
     });
 
+    totalDisplay.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(total);
+    recalcChange();
 
-    $(document).on('click', '.removeItem', function(){
-        const idx = $(this).closest('tr').data('idx');
-        items.splice(idx,1);
-        recalc();
+    document.querySelectorAll('.qty-input').forEach(el => {
+      el.addEventListener('change', function(){
+        const idx = Number(this.dataset.index);
+        cart[idx].qty = Math.max(1, Number(this.value) || 1);
+        renderCart();
+      });
     });
 
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', function(){
+        cart.splice(this.dataset.index, 1);
+        renderCart();
+      });
+    });
+  }
 
-    function getTotalRaw(){ return items.reduce((s,it)=>s + (it.qty*it.price),0); }
+  function recalcChange(){
+    const rawTotal = cart.reduce((s,i)=> s + (i.price * i.qty), 0);
+    const bayar = Number(paidInput.value || 0);
+    const change = Math.max(bayar - rawTotal, 0);
+    changeDisplay.value = 'Rp ' + new Intl.NumberFormat('id-ID').format(change);
+  }
 
+  paidInput.addEventListener('input', recalcChange);
 
-    function updatePaymentState(){
-        const payment = parseInt($('#payment_amount').val()||0);
-        const total = getTotalRaw();
-        const change = Math.max(0, payment - total);
-        $('#payment_change_display').val(formatRupiah(change));
-
-
-        const $pay = $('#payment_amount');
-        const $fb = $('#payment_feedback');
-        const $submit = $('#submitTx');
-
-
-        if(payment < total){
-            $pay.addClass('is-invalid').removeClass('is-valid');
-            $fb.removeClass('d-none');
-            $submit.prop('disabled', true);
-        } else {
-            $pay.removeClass('is-invalid').addClass('is-valid');
-            $fb.addClass('d-none');
-            $submit.prop('disabled', items.length===0);
-        }
+  form.addEventListener('submit', async function(evt){
+    evt.preventDefault();
+    if (cart.length === 0) {
+      Swal.fire('Peringatan', 'Keranjang masih kosong!', 'warning');
+      return;
     }
 
+    const rawTotal = cart.reduce((s,i)=> s + (i.price * i.qty), 0);
+    const bayar = Number(paidInput.value || 0);
+    if (bayar < rawTotal) {
+      Swal.fire('Gagal', 'Uang bayar kurang dari total belanja!', 'error');
+      return;
+    }
 
-    $('#payment_amount').on('input', function(){ updatePaymentState(); });
-
-
-    // Exact button fills payment with exact total amount
-    $('#exactPay').on('click', function(){
-        const total = getTotalRaw();
-        $('#payment_amount').val(total);
-        updatePaymentState();
-    });
-
-
-    // keep submit button disabled until items added
-    $('#submitTx').prop('disabled', true);
-    // enable/disable based on items change
-    const origSubmitHandler = function(){
-        if(items.length===0) return Swal.fire('Error','Tambahkan item terlebih dahulu','error');
-        const payment = parseInt($('#payment_amount').val()||0);
-        const total = getTotalRaw();
-
-
-        if(payment < total){
-            return Swal.fire('Pembayaran Kurang', 'Jumlah bayar kurang dari total transaksi. Mohon periksa kembali.', 'warning');
-        }
-
-
-        const payload = {
-        _token: $('input[name="_token"]').first().val(),
-        customer_name: $('#customer_name').val(),
-        paid_amount: payment, // ✅ sesuaikan dengan yang diminta backend
-        items: items.map(i=>({product_id:i.product_id, quantity:i.qty, unit_price:i.price}))
-        };
-
-
-        const $btn = $('#submitTx');
-        $btn.prop('disabled', true).text('Menyimpan...');
-
-
-        $.ajax({
-            url: "{{ route('kasir.transaksi.store') }}",
-            method: 'POST',
-            data: payload,
-            dataType: 'json'
-        }).done(function(res){
-            Swal.fire('Sukses', res.message || 'Transaksi tersimpan', 'success').then(()=>location.reload());
-        }).fail(function(xhr){
-            const json = xhr.responseJSON;
-            const msg = json?.message || 'Terjadi kesalahan';
-            let detail = '';
-            if(json?.errors){
-                detail = Object.values(json.errors).flat().join('<br>');
-            }
-            Swal.fire('Gagal', msg + (detail? '<br>'+detail:''), 'error');
-        }).always(function(){
-            $btn.prop('disabled', false).text('Simpan Transaksi');
+    const fd = new FormData(this);
+    try {
+      const res = await fetch(this.action, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value },
+        body: fd
+      });
+      const data = await res.json().catch(()=>({}));
+      if (res.ok && (data.success || data.message)) {
+        Swal.fire({
+          title: 'Sukses',
+          text: data.message || 'Transaksi berhasil',
+          icon: 'success',
+          showCancelButton: true,
+          confirmButtonText: 'Cetak Struk',
+          cancelButtonText: 'OK'
+        }).then((result) => {
+          if (result.isConfirmed && data.print_url) {
+            window.open(data.print_url, '_blank');
+          }
         });
-    };
+        cart.length = 0;
+        this.reset();
+        renderCart();
+      } else {
+        Swal.fire('Error', data.message || 'Gagal menyimpan transaksi', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+    }
+  });
 
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'`=\/]/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'
+    })[s]);
+  }
 
-    $('#submitTx').off('click').on('click', origSubmitHandler);
-
-
-    // ensure initial state
-    $(function(){
-        recalc();
-        updatePaymentState();
-    });
-
-
+  renderCart();
+})();
 </script>
 @endsection

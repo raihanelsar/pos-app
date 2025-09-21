@@ -1,144 +1,97 @@
 @extends('layouts.app')
-@section('title', 'Pimpinan Dashboard')
+@section('title', 'Dashboard Pimpinan')
 
 @section('content')
-<section class="row text-white">
-  <div class="col-12">
+<div class="pagetitle">
+    <h1>Dashboard</h1>
+</div>
+
+<section class="section dashboard">
+    <div class="row text-white">
+
+        <!-- Statistik Card -->
+        @foreach ([
+            'Produk' => $productCount,
+            'Kategori' => $categoryCount,
+            'Transaksi' => $transactionCount,
+            'Pendapatan' => 'Rp ' . number_format($totalRevenue, 0, ',', '.')
+        ] as $title => $value)
+            <div class="col-lg-3 col-md-6">
+                <div class="card info-card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ $title }}</h5>
+                        <p class="fs-4 fw-bold text-white">{{ $value }}</p>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <!-- Grafik Pendapatan Bulanan -->
     <div class="row">
-
-      {{-- Card Produk --}}
-      <div class="col-6 col-lg-3 col-md-6">
-        <div class="card bg-dark">
-          <div class="card-body px-4 py-4-5">
-            <div class="d-flex align-items-center">
-              <i class="mdi mdi-package-variant text-info fs-2 me-3"></i>
-              <div>
-                <h6 class="text-white">Produk</h6>
-                <h5 class="font-extrabold text-white mb-0">
-                  {{ number_format($productCount ?? 0) }}
-                </h5>
-              </div>
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Grafik Pendapatan Bulanan</h5>
+                    <div id="reportsChart" style="min-height: 350px;"></div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-
-      {{-- Card Kategori --}}
-      <div class="col-6 col-lg-3 col-md-6">
-        <div class="card bg-dark">
-          <div class="card-body px-4 py-4-5">
-            <div class="d-flex align-items-center">
-              <i class="mdi mdi-shape text-warning fs-2 me-3"></i>
-              <div>
-                <h6 class="text-white">Kategori</h6>
-                <h5 class="font-extrabold text-white mb-0">
-                  {{ number_format($categoriesCount ?? 0) }}
-                </h5>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {{-- Card Transaksi --}}
-      <div class="col-6 col-lg-3 col-md-6">
-        <div class="card bg-dark">
-          <div class="card-body px-4 py-4-5">
-            <div class="d-flex align-items-center">
-              <i class="mdi mdi-receipt text-primary fs-2 me-3"></i>
-              <div>
-                <h6 class="text-white">Transaksi</h6>
-                <h5 class="font-extrabold text-white mb-0">
-                  {{ number_format($transactionCount ?? 0) }}
-                </h5>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {{-- Card Total Profit --}}
-      <div class="col-6 col-lg-3 col-md-6">
-        <div class="card bg-dark">
-          <div class="card-body px-4 py-4-5">
-            <div class="d-flex align-items-center">
-              <i class="mdi mdi-cash-multiple text-success fs-2 me-3"></i>
-              <div>
-                <h6 class="text-white">Total Profit</h6>
-                <h5 class="font-extrabold text-white mb-0">
-                  {{ 'Rp. '.number_format($totalProfitSum ?? 0, 0, ',', '.') }}
-                </h5>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    {{-- Grafik Riwayat Transaksi --}}
-    <div class="row mt-4">
-      <div class="col-lg-12">
-        <div class="card bg-dark">
-          <div class="card-header">
-            <h6 class="text-white mb-0">Riwayat Transaksi</h6>
-          </div>
-          <div class="card-body">
-            <div id="transactionChart"></div>
-          </div>
+    <!-- Top 5 Produk Terlaris -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Top 5 Produk Terlaris</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Terjual</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($topSelling as $item)
+                                    <tr>
+                                        <td>{{ $item->product->product_name }}</td>
+                                        <td>{{ $item->total_qty }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="2" class="text-center">Belum ada data</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+
 </section>
-@endsection
 
-@section('script')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var currencyFormatter = new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    });
-
-    var options = {
-      chart: {
-        type: "line",
-        height: 350,
-        toolbar: { show: false }
-      },
-      series: [{
-        name: 'Total Profit',
-        data: @json($totalProfits ?? [])
-      }],
-      xaxis: {
-        categories: @json($dates ?? []),
-        labels: { style: { colors: '#fff' } }
-      },
-      yaxis: {
-        labels: {
-          style: { colors: '#fff' },
-          formatter: function (val) {
-            return currencyFormatter.format(Math.round(val || 0));
-          }
+document.addEventListener("DOMContentLoaded", () => {
+    const options = {
+        chart: { height: 350, type: 'line', toolbar: { show: false }, zoom: { enabled: false } },
+        series: [{ name: 'Pendapatan', data: @json($chartData) }],
+        xaxis: { categories: @json($chartLabels), labels: { rotate: -45 } },
+        stroke: { curve: 'smooth', width: 2 },
+        markers: { size: 4 },
+        colors: ['#4154f1'],
+        fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
+        dataLabels: { enabled: false },
+        tooltip: {
+            x: { format: 'yyyy-MM' },
+            y: { formatter: value => "Rp " + new Intl.NumberFormat('id-ID').format(value) }
         }
-      },
-      tooltip: {
-        y: {
-          formatter: function (val) {
-            return currencyFormatter.format(Math.round(val || 0));
-          }
-        }
-      },
-      colors: ['#00E396'],
-      stroke: { curve: 'smooth' },
-      grid: { borderColor: '#444' }
     };
-
-    var chart = new ApexCharts(document.querySelector("#transactionChart"), options);
-    chart.render();
-  });
+    new ApexCharts(document.querySelector("#reportsChart"), options).render();
+});
 </script>
 @endsection

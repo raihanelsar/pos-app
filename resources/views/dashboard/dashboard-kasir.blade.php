@@ -1,184 +1,137 @@
 @extends('layouts.app')
-@section('title', 'Kasir Dashboard')
+@section('title', 'Dashboard Kasir')
 
 @section('content')
-<section class="row text-white">
-    <div class="col-12 col-lg-12">
-        <div class="row">
+<div class="pagetitle">
+  <h1>Dashboard</h1>
+</div>
 
-            {{-- Card Produk --}}
-            <div class="col-6 col-lg-3 col-md-6">
-                <div class="card bg-dark">
-                    <div class="card-body px-4 py-4-5">
-                        <div class="d-flex align-items-center">
-                            <i class="mdi mdi-package-variant text-info fs-2 me-3"></i>
-                            <div>
-                                <h6 class="text-white">Produk</h6>
-                                <h5 class="font-extrabold text-white mb-0">
-                                    {{ number_format($productCount ?? 0) }}
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
+<section class="section dashboard">
+  <div class="row">
+
+    <!-- Left side -->
+    <div class="col-lg-8">
+      <div class="row">
+
+        <!-- Orders Today -->
+        <div class="col-md-4">
+          <div class="card info-card sales-card">
+            <div class="card-body">
+              <h5 class="card-title">Orders <span>| Today</span></h5>
+              <div class="d-flex align-items-center">
+                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                  <i class="mdi mdi-cart"></i>
                 </div>
-            </div>
-
-            {{-- Card Kategori --}}
-            <div class="col-6 col-lg-3 col-md-6">
-                <div class="card bg-dark">
-                    <div class="card-body px-4 py-4-5">
-                        <div class="d-flex align-items-center">
-                            <i class="mdi mdi-shape text-warning fs-2 me-3"></i>
-                            <div>
-                                <h6 class="text-white">Kategori</h6>
-                                <h5 class="font-extrabold text-white mb-0">
-                                    {{ number_format($categoriesCount ?? 0) }}
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
+                <div class="ps-3">
+                  <h6>{{ $todayOrders }}</h6>
                 </div>
+              </div>
             </div>
-
-            {{-- Card Transaksi --}}
-            <div class="col-6 col-lg-3 col-md-6">
-                <div class="card bg-dark">
-                    <div class="card-body px-4 py-4-5">
-                        <div class="d-flex align-items-center">
-                            <i class="mdi mdi-receipt text-primary fs-2 me-3"></i>
-                            <div>
-                                <h6 class="text-white">Transaksi</h6>
-                                <h5 class="font-extrabold text-white mb-0">
-                                    {{ number_format($transactionCount ?? 0) }}
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card Total Profit --}}
-            <div class="col-6 col-lg-3 col-md-6">
-                <div class="card bg-dark">
-                    <div class="card-body px-4 py-4-5">
-                        <div class="d-flex align-items-center">
-                            <i class="mdi mdi-cash-multiple text-success fs-2 me-3"></i>
-                            <div>
-                                <h6 class="text-white">Total Profit</h6>
-                                <h5 class="font-extrabold text-white mb-0">
-                                    {{ 'Rp. ' . number_format($totalProfitSum ?? 0, 0, ',', '.') }}
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
 
-        {{-- Grafik Riwayat Transaksi --}}
-        <div class="row mt-4">
-            <div class="col-lg-12">
-                <div class="card bg-dark">
-                    <div class="card-header">
-                        <h6 class="text-white mb-0">Riwayat Transaksi</h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="transactionChart"></div>
-                    </div>
+        <!-- Revenue Today -->
+        <div class="col-md-4">
+          <div class="card info-card revenue-card">
+            <div class="card-body">
+              <h5 class="card-title">Revenue <span>| Today</span></h5>
+              <div class="d-flex align-items-center">
+                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                  <i class="mdi mdi-currency-usd"></i>
                 </div>
+                <div class="ps-3">
+                  <h6>{{ 'Rp. ' . number_format($todaySales, 0, ',', '.') }}</h6>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
 
-        {{-- Tabel Transaksi Terbaru --}}
-        <div class="row mt-4">
-            <div class="col-lg-12">
-                <div class="card bg-dark">
-                    <div class="card-header">
-                        <h6 class="text-white mb-0">Transaksi Terbaru</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-dark table-striped mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Kode Transaksi</th>
-                                        <th>Tanggal</th>
-                                        <th>Total</th>
-                                        <th>Kasir</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($recentTransactions ?? [] as $trx)
-                                        <tr>
-                                            <td>{{ $trx->transaction_code ?? '-' }}</td>
-                                            <td>{{ $trx->formatted_date ?? $trx->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
-                                            <td>{{ 'Rp. ' . number_format($trx->total ?? 0, 0, ',', '.') }}</td>
-                                            <td>{{ $trx->cashier_name ?? '-' }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center text-muted">Belum ada transaksi terbaru</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <!-- Active Products -->
+        <div class="col-md-4">
+          <div class="card info-card customers-card">
+            <div class="card-body">
+              <h5 class="card-title">Produk Aktif</h5>
+              <div class="d-flex align-items-center">
+                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                  <i class="mdi mdi-package-variant"></i>
                 </div>
+                <div class="ps-3">
+                  <h6>{{ $activeProducts }}</h6>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
 
+        <!-- Recent Orders -->
+        <div class="col-12">
+          <div class="card recent-sales overflow-auto">
+            <div class="card-body">
+              <h5 class="card-title">Recent Orders <span>| Latest 5</span></h5>
+              <table class="table table-borderless">
+                <thead>
+                  <tr>
+                    <th>Kode</th>
+                    <th>Tanggal</th>
+                    <th>Jumlah</th>
+                    <th>Kembalian</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @forelse($orders as $order)
+                    <tr>
+                      <td>{{ $order->order_code }}</td>
+                      <td>{{ $order->order_date->format('d/m/Y H:i') }}</td>
+                      <td>{{ 'Rp. ' . number_format($order->order_amount, 0, ',', '.') }}</td>
+                      <td>{{ 'Rp. ' . number_format($order->order_change, 0, ',', '.') }}</td>
+                    </tr>
+                  @empty
+                    <tr>
+                      <td colspan="4" class="text-center">Belum ada transaksi</td>
+                    </tr>
+                  @endforelse
+                </tbody>
+              </table>
+              <div class="mt-2">
+                {{ $orders->links() }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
+
+    <!-- Right side -->
+    <div class="col-lg-4">
+      <div class="card top-selling overflow-auto">
+        <div class="card-body pb-0">
+          <h5 class="card-title">Top Products <span>| Best Seller</span></h5>
+          <table class="table table-borderless">
+            <thead>
+              <tr>
+                <th>Produk</th>
+                <th>Terjual</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse($topProducts as $product)
+                <tr>
+                  <td><span class="text-primary fw-bold">{{ $product->product->product_name ?? 'Unknown' }}</span></td>
+                  <td class="fw-bold">{{ $product->sold_qty }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="2" class="text-center">Belum ada data</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </section>
-@endsection
-
-@section('script')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function(){
-        var currencyFormatter = new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        });
-
-        var options = {
-            chart: {
-                type: "line",
-                height: 350,
-                toolbar: { show: false }
-            },
-            series: [{
-                name: 'Total Profit',
-                data: @json($totalProfits ?? [])
-            }],
-            xaxis: {
-                categories: @json($dates ?? []),
-                labels: { style: { colors: '#fff' } }
-            },
-            yaxis: {
-                labels: {
-                    style: { colors: '#fff' },
-                    formatter: function (val) {
-                        return currencyFormatter.format(Math.round(val || 0));
-                    }
-                }
-            },
-            tooltip: {
-                y: {
-                    formatter: function (val) {
-                        return currencyFormatter.format(Math.round(val || 0));
-                    }
-                }
-            },
-            colors: ['#00E396'],
-            stroke: { curve: 'smooth' },
-            grid: { borderColor: '#444' }
-        };
-
-        var chart = new ApexCharts(document.querySelector("#transactionChart"), options);
-        chart.render();
-    });
-</script>
 @endsection

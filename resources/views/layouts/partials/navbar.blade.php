@@ -1,6 +1,10 @@
 <nav class="navbar p-0 fixed-top d-flex flex-row">
   <div class="navbar-brand-wrapper d-flex d-lg-none align-items-center justify-content-center">
-    <a class="navbar-brand brand-logo-mini" href="{{ route('dashboard') }}">
+    <a class="navbar-brand brand-logo-mini" href="{{
+                auth()->user()->role_name == 'admin' ? route('admin.dashboard') :
+                (auth()->user()->role_name == 'kasir' ? route('kasir.dashboard') :
+                route('pimpinan.dashboard'))
+            }}"">
       <img src="{{ asset('corona/assets/images/logo-mini.svg') }}" alt="logo" />
     </a>
   </div>

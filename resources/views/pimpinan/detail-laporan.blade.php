@@ -35,7 +35,7 @@
                                     <td>{{ $item->qty }}</td>
                                     <td>{{ $item->formatted_subtotal }}</td>
                                 </tr>
-                                @endforeach
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -47,12 +47,11 @@
                     <h6><b>Kembalian:</b> Rp {{ number_format($order->order_change, 0, ',', '.') }}</h6>
                 </div>
 
-                {{-- <!-- Back Button -->
                 <div class="mt-4 text-start">
                     <a href="{{ route('pimpinan.laporan') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Kembali
                     </a>
-                </div> --}}
+                </div>
 
             </div>
         </div>
