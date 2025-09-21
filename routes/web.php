@@ -30,7 +30,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Role 1: Admin
     Route::middleware('role:1')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', function () {
+        return view('dashboard.dashboard-admin');
+    })->name('dashboard');
         Route::resource('products', ProductController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('users', UserController::class);
@@ -38,13 +40,19 @@ Route::middleware(['auth'])->group(function () {
 
     // Role 2: Kasir
     Route::middleware('role:2')->prefix('kasir')->name('kasir.')->group(function () {
-        Route::get('/dashboard', [TransactionController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', function () {
+        return view('dashboard.dashboard-kasir');
+    })->name('dashboard');
+        Route::get('/', [TransactionController::class, 'index'])->name('index');
         Route::post('/transaksi', [TransactionController::class, 'store'])->name('transaksi.store');
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     });
 
     // Role 3: Pimpinan
     Route::middleware('role:3')->prefix('pimpinan')->name('pimpinan.')->group(function () {
+         Route::get('/dashboard', function () {
+        return view('dashboard.dashboard-pimpinan');
+    })->name('dashboard');
         Route::get('/dashboard', [PimpinanController::class, 'index'])->name('dashboard');
         Route::get('/products', [ProductController::class, 'index'])->name('products.index');
         Route::get('/laporan', [TransactionController::class, 'laporan'])->name('pimpinan.laporan');

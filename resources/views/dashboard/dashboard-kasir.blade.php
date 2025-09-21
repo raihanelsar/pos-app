@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Admin Dashboard')
+@section('title', 'Kasir Dashboard')
 
 @section('content')
 <section class="row text-white">
@@ -66,7 +66,7 @@
                             <div>
                                 <h6 class="text-white">Total Profit</h6>
                                 <h5 class="font-extrabold text-white mb-0">
-                                    {{ 'Rp. '.number_format($totalProfitSum ?? 0,0,',','.') }}
+                                    {{ 'Rp. ' . number_format($totalProfitSum ?? 0, 0, ',', '.') }}
                                 </h5>
                             </div>
                         </div>
@@ -85,6 +85,45 @@
                     </div>
                     <div class="card-body">
                         <div id="transactionChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tabel Transaksi Terbaru --}}
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        <h6 class="text-white mb-0">Transaksi Terbaru</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Kode Transaksi</th>
+                                        <th>Tanggal</th>
+                                        <th>Total</th>
+                                        <th>Kasir</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentTransactions ?? [] as $trx)
+                                        <tr>
+                                            <td>{{ $trx->transaction_code ?? '-' }}</td>
+                                            <td>{{ $trx->formatted_date ?? $trx->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
+                                            <td>{{ 'Rp. ' . number_format($trx->total ?? 0, 0, ',', '.') }}</td>
+                                            <td>{{ $trx->cashier_name ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">Belum ada transaksi terbaru</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

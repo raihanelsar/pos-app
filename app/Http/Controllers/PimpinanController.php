@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Order;
+use Illuminate\Http\Request;
 
 class PimpinanController extends Controller
 {
     public function index()
     {
-        // Ambil data transaksi dari database
-        $orders = Order::with('items') // kalau ada relasi items
-            ->orderBy('order_date', 'desc')
+        // Ambil data transaksi terbaru
+        $orders = Order::with('items')
+            ->latest('order_date')
             ->get()
             ->map(function ($order) {
                 return (object) [
                     'id' => $order->id,
                     'order_code' => $order->order_code,
-                    'formatted_amount' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
+                    'formatted_amount' => $this->formatRupiah($order->total_amount),
                     'order_date' => $order->order_date,
-                    'formatted_change' => 'Rp ' . number_format($order->change_amount, 0, ',', '.'),
+                    'formatted_change' => $this->formatRupiah($order->change_amount),
                 ];
             });
 
@@ -31,5 +31,13 @@ class PimpinanController extends Controller
         $order = Order::with('items')->findOrFail($id);
 
         return view('pimpinan.detail-laporan', compact('order'));
+    }
+
+    /**
+     * Format angka ke Rupiah
+     */
+    private function formatRupiah($value)
+    {
+        return 'Rp ' . number_format($value ?? 0, 0, ',', '.');
     }
 }

@@ -29,7 +29,7 @@
                 <div class="collapse" id="master-data">
 
                 <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
+                    <li class="nav-item menu-items">
                     <a class="nav-link" href="{{ route('admin.products.index') }}">
                         <span class="menu-icon">
                             <i class="mdi mdi-cube-outline"></i>
@@ -38,7 +38,7 @@
                     </a>
                     </li>
 
-                    <li class="nav-item">
+                    <li class="nav-item menu-items">
                     <a class="nav-link" href="{{ route('admin.categories.index') }}">
                         <span class="menu-icon">
                             <i class="mdi mdi-tag-multiple"></i>
@@ -71,11 +71,10 @@
                     <span class="menu-title">Produk</span>
                 </a>
             </li>
-
             <li class="nav-item menu-items">
-                <a class="nav-link" href="{{ route('kasir.dashboard') }}">
+                <a class="nav-link" href="{{ route('kasir.index') }}">
                     <span class="menu-icon">
-                        <i class="mdi mdi-cart"></i>
+                        <i class="mdi mdi-cash"></i>
                     </span>
                     <span class="menu-title">Transaksi</span>
                 </a>
@@ -84,7 +83,7 @@
 
             {{-- Pimpinan --}}
             @if(auth()->user()->role_name == 'pimpinan')
-            <li class="nav-item">
+            <li class="nav-item menu-items">
                 <a class="nav-link" href="{{ route('pimpinan.products.index') }}">
                     <span class="menu-icon">
                         <i class="mdi mdi-cube-outline"></i>

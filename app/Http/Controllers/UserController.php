@@ -2,38 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
     /**
-     * Tampilkan daftar user
+     * Tampilkan daftar user.
      */
     public function index()
     {
-        $datas = User::get();
+        $datas = User::latest()->get();
+
+        // Ambil roles dari tabel langsung
+        $roles = DB::table('roles')->get();
 
         return view('admin.users.index', compact('datas', 'roles'));
     }
 
     /**
-     * Simpan user baru
+     * Simpan user baru.
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'role_id'  => 'required|exists:roles,id',
-            'password' => 'required|min:8|confirmed',
+        $request->validate([
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|unique:users,email',
+            'role_id'               => 'required|exists:roles,id',
+            'password'              => 'required|string|min:6|confirmed',
         ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
 
         User::create([
             'name'     => $request->name,
@@ -42,48 +42,38 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan!');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan');
     }
 
     /**
-     * Update user
+     * Update user.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email,' . $user->id,
-            'role_id'  => 'required|exists:roles,id',
-            'password' => 'nullable|min:8|confirmed',
+        $request->validate([
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|unique:users,email,' . $user->id,
+            'role_id'               => 'required|exists:roles,id',
+            'password'              => 'nullable|string|min:6|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
+        $user->update([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'role_id'  => $request->role_id,
+            'password' => $request->filled('password') ? Hash::make($request->password) : $user->password,
+        ]);
 
-        $user->name    = $request->name;
-        $user->email   = $request->email;
-        $user->role_id = $request->role_id;
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
-
-        return redirect()->route('users.index')->with('success', 'User berhasil diupdate!');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui');
     }
 
     /**
-     * Hapus user
+     * Hapus user.
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User berhasil dihapus!');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus');
     }
 }
