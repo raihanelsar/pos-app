@@ -195,10 +195,10 @@
 
 
         const payload = {
-            _token: $('input[name="_token"]').first().val(),
-            customer_name: $('#customer_name').val(),
-            payment_amount: payment,
-            items: items.map(i=>({product_id:i.product_id, quantity:i.qty, unit_price:i.price}))
+        _token: $('input[name="_token"]').first().val(),
+        customer_name: $('#customer_name').val(),
+        paid_amount: payment, // ✅ sesuaikan dengan yang diminta backend
+        items: items.map(i=>({product_id:i.product_id, quantity:i.qty, unit_price:i.price}))
         };
 
 

@@ -35,11 +35,13 @@ class TransactionController extends Controller
 
         // Simpan order
         $order = Order::create([
-            'order_code'   => 'ORD' . now()->format('YmdHis') . rand(1000, 9999),
-            'customer_name'=> $data['customer_name'],
-            'order_date'   => now(),
-            'total_amount' => $totalAmount,
-            'order_change' => $data['paid_amount'] - $totalAmount,
+            'order_code'    => 'ORD' . now()->format('YmdHis') . rand(1000, 9999),
+            'customer_name' => $data['customer_name'],
+            'order_date'    => now(),
+            'order_amount'  => $data['paid_amount'], // ✅ uang yang dibayar customer
+            'total_amount'  => $totalAmount,
+            'order_change'  => $data['paid_amount'] - $totalAmount,
+            'order_status'  => 'pending', // kalau ada default bisa diabaikan
         ]);
 
         // Simpan detail order

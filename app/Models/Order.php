@@ -10,13 +10,14 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_name',
-        'order_code',
-        'order_date',
-        'total_amount',   // gunakan ini saja, jangan duplikat dengan order_amount
-        'order_change',
-        'order_status',
-    ];
+    'order_code',
+    'customer_name',
+    'order_date',
+    'order_amount',
+    'total_amount',
+    'order_change',
+    'order_status',
+];
 
     protected $appends = ['formatted_date', 'formatted_total', 'formatted_change'];
 

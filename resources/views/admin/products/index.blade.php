@@ -183,30 +183,41 @@
 
     // Initialize DataTable with plain functions (more compatible than arrow in some contexts)
     let table = $('#table1').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: "{{ route('products.data') }}",
-        columns: [
-            {data: 'action', orderable: false, searchable: false},
-            {data: 'category_name', name: 'category_name'},
-            {data: 'product_name', name: 'product_name'},
-            {
-                data: 'product_photo',
-                render: function(data, type, row, meta) {
-                    return data ? '<img src="/storage/' + data + '" width="50">' : '-';
+    processing: true,
+    serverSide: true,
+    ajax: "{{ route('products.data') }}",
+    columns: [
+        {data: 'action', orderable: false, searchable: false},
+        {data: 'category_name', name: 'category_name'},
+        {data: 'product_name', name: 'product_name'},
+        {
+            data: 'product_photo',
+            render: function(data, type, row, meta) {
+                return data ? '<img src="/storage/' + data + '" width="50">' : '-';
+            }
+        },
+        {
+            data: 'product_price',
+            name: 'product_price',
+            render: function(data) {
+                return formatRupiah(data);
+            }
+        },
+        {data: 'product_description', name: 'product_description'},
+        {
+            data: 'is_active',
+            name: 'is_active',
+            render: function(data) {
+                if (data == 1) {
+                    return '<span class="badge bg-success">Ada</span>';
+                } else {
+                    return '<span class="badge bg-danger">Tidak Ada</span>';
                 }
-            },
-            {
-                data: 'product_price',
-                name: 'product_price',
-                render: function(data) {
-                    return formatRupiah(data);
-                }
-            },
-            {data: 'product_description', name: 'product_description'},
-            {data: 'is_active', name: 'is_active'}
-        ]
-    });
+            }
+        }
+    ]
+});
+
 
     // Bind price formatting only if the inputs exist
     const $createPriceDisplay = $('#create_product_price_display');

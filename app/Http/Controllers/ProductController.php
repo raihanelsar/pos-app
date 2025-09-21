@@ -29,9 +29,8 @@ class ProductController extends Controller
             // Hanya admin yang bisa edit/hapus
             if (Auth::check() && Auth::user()->role_id == 1) {
                 return '
-                    <a href="'.route('admin.products.edit', $row->id).'" class="btn btn-warning btn-sm">
+                    <button type="button" class="btn btn-warning btn-sm btnEdit" data-id="'.$row->id.'">
                         <i class="mdi mdi-pencil"></i> Edit
-                    </a>
                     <form action="'.route('admin.products.destroy', $row->id).'" method="POST" style="display:inline;">
                         '.csrf_field().method_field('DELETE').'
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Yakin hapus?\')">

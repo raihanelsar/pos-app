@@ -116,8 +116,8 @@
                 </a>
                 <div class="collapse" id="setting-akun">
                 <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="">Profile</a></li>
-                    <li class="nav-item"> <a class="nav-link" href="">Ganti Password</a></li>
+                    <li class="nav-item"> <a class="nav-link" href="{{ route('profile.edit') }}">Profile</a></li>
+                    <li class="nav-item"> <a class="nav-link" href="{{ route('password.edit') }}">Ganti Password</a></li>
                 </ul>
                 </div>
             </li>

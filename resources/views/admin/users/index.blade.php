@@ -16,6 +16,14 @@
             </button>
           </div>
 
+          <!-- Alert Success -->
+          @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              {{ session('success') }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          @endif
+
           <!-- User Table -->
           <table class="table table-bordered table-hover datatable">
             <thead class="table-dark">
@@ -41,9 +49,9 @@
                   </td>
                   <td>
                     <!-- Edit Button -->
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
+                    {{-- <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $user->id }}">
                       <i class="bi bi-pencil"></i>
-                    </button>
+                    </button> --}}
 
                     <!-- Delete Form -->
                     <form class="d-inline" action="{{ route('admin.users.destroy', $user->id) }}" method="POST">
@@ -57,7 +65,7 @@
                 </tr>
 
                 <!-- Edit Modal -->
-                <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
+                {{-- <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-hidden="true">
                   <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                       <div class="modal-header bg-secondary text-white">
@@ -71,28 +79,34 @@
 
                           <div class="mb-3">
                             <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                                   value="{{ old('name', $user->name) }}" required>
+                            @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                           </div>
 
                           <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                                   value="{{ old('email', $user->email) }}" required>
+                            @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                           </div>
 
                           <div class="mb-3">
                             <label class="form-label">Role</label>
-                            <select name="role_id" class="form-select" required>
+                            <select name="role_id" class="form-select @error('role_id') is-invalid @enderror" required>
                               @foreach ($roles as $role)
                                 <option value="{{ $role->id }}" {{ $user->role_id == $role->id ? 'selected' : '' }}>
                                   {{ $role->name }}
                                 </option>
                               @endforeach
                             </select>
+                            @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                           </div>
 
                           <div class="mb-3">
                             <label class="form-label">Password (kosongkan jika tidak diganti)</label>
-                            <input type="password" name="password" class="form-control">
+                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror">
+                            @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                           </div>
 
                           <div class="mb-3">
@@ -107,7 +121,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> --}}
               @empty
                 <tr>
                   <td colspan="5" class="text-center">Tidak ada user</td>
@@ -135,27 +149,35 @@
           @csrf
           <div class="mb-3">
             <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" required>
+            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                   value="{{ old('name') }}" required>
+            @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="mb-3">
             <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" required>
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                   value="{{ old('email') }}" required>
+            @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="mb-3">
             <label class="form-label">Role</label>
-            <select name="role_id" class="form-select" required>
+            <select name="role_id" class="form-select @error('role_id') is-invalid @enderror" required>
               <option value="">-- Select Role --</option>
               @foreach ($roles as $role)
-                <option value="{{ $role->id }}">{{ $role->name }}</option>
+                <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                  {{ $role->name }}
+                </option>
               @endforeach
             </select>
+            @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="mb-3">
             <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+            @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="mb-3">
