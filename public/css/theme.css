@@ -1,0 +1,104 @@
+/* Theme CSS for POS Admin - dark/light toggling */
+
+/* Default (light) styles */
+body {
+  background-color: #ffffff;
+  color: #212529;
+}
+
+.card {
+  background-color: #ffffff;
+  color: #212529;
+  border-color: #dee2e6;
+}
+
+/* CTA used in welcome page to mimic strong button */
+.card-cta{
+  background-color:#1b1b18;
+  color:#fff;
+  border:1px solid #000;
+}
+
+body.dark-mode .card-cta{
+  background-color:transparent;
+  color:#e9ecef;
+  border:1px solid #444;
+}
+
+/* Keep form controls light by default */
+.form-control,
+.form-select {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Dark mode (activated by adding .dark-mode on body) */
+body.dark-mode {
+  background-color: #121212;
+  color: #e9ecef;
+}
+
+body.dark-mode .card {
+  background-color: #1e1e1e;
+  color: #e9ecef;
+  border-color: #2b2b2b;
+}
+
+/* Inputs in dark mode: keep light background for inputs by default,
+   but if you want inputs to follow dark mode, uncomment below */
+/*
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #2b2b2b;
+  color: #e9ecef;
+  border: 1px solid #444;
+}
+*/
+
+/* DataTables dark styles (apply only in dark mode) */
+body.dark-mode .dataTables_wrapper .dataTables_filter input,
+body.dark-mode .dataTables_wrapper .dataTables_length select {
+    background: #2b2b2b;
+    color: #e9ecef;
+    border: 1px solid #444;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_filter label,
+body.dark-mode .dataTables_wrapper .dataTables_length label {
+    color: #ced4da;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: transparent;
+    color: #e9ecef !important;
+    border: 1px solid transparent;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+body.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #444;
+    color: #fff !important;
+    border: 1px solid #5a5a5a;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_info,
+body.dark-mode .dataTables_wrapper .dataTables_length,
+body.dark-mode .dataTables_wrapper .dataTables_filter {
+    color: #ced4da;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_empty,
+body.dark-mode .dataTables_wrapper .dataTables_info {
+    color: #ced4da;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_filter input::placeholder {
+    color: #9aa0a6;
+    opacity: 1;
+}
+
+/* Ensure action buttons remain readable on dark background */
+body.dark-mode .table-dark .btn,
+body.dark-mode .table-dark a.btn {
+    color: #fff;
+}
